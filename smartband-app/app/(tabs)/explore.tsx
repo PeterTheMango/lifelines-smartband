@@ -4,16 +4,18 @@ import { Text, StyleSheet, Pressable, View, Image } from "react-native";
 const Menu = () => {
   return (
     <View style={styles.menuContainer}>
+      <Pressable onPress={() => navigation.navigate('/')}>
+        <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
+      </Pressable>
       <Text style={styles.title}>SMARTBAND</Text>
       <View style={styles.menuItems}>
         <Text style={styles.menuText}>Menu</Text>
-        <Pressable onPress={() => {}}>
+        <Pressable onPress={() => navigation.navigate('/rescue_history')}>
           <Text style={styles.menuText}>History</Text>
         </Pressable>
         <Text style={styles.menuText}>Settings</Text>
         <Text style={styles.menuText}>Logout</Text>
       </View>
-      <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
     </View>
   );
 };

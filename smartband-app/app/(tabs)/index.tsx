@@ -7,6 +7,7 @@ import {
   View,
   ImageBackground,
 } from "react-native";
+import MapView from 'react-native-maps';
 
 const LocationTrackerMenu = () => {
   return (
@@ -15,7 +16,7 @@ const LocationTrackerMenu = () => {
       resizeMode="cover"
       source={require("../../assets/images/map.png")}
     >
-      <Pressable style={styles.menu} onPress={() => {}}>
+      <Pressable style={styles.menu} onPress={() => navigation.navigate('/explore')}>
         <Image
           style={styles.icon}
           resizeMode="cover"
@@ -46,7 +47,7 @@ const LocationTrackerMenu = () => {
             <Text style={styles.nearbyDevicesTitle}>Nearby Devices</Text>
           </View>
           {[...Array(3)].map((_, index) => (
-            <Pressable key={index} style={styles.deviceItem} onPress={() => {}}>
+            <Pressable key={index} style={styles.deviceItem} onPress={() => navigation.navigate('/confirm_details')}>
               <View style={styles.deviceStatusButton}>
                 <Text style={styles.rescueText}>{`Mark as\nRescued`}</Text>
               </View>
@@ -127,8 +128,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#bfc3ba",
     padding: 20,
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
+    borderRadius: 25,
     alignItems: "center",
   },
   nearbyDevicesHeader: {
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "rgba(169, 172, 169, 0.5)",
     borderRadius: 100,
-    width: "100%",
+    width: "110%",
   },
   deviceStatusButton: {
     backgroundColor: "rgba(25, 218, 25, 0.65)",
