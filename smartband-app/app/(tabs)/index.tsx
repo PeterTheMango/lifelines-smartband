@@ -7,22 +7,42 @@ import {
   View,
   ImageBackground,
 } from "react-native";
-import MapView from 'react-native-maps';
+import { Link } from 'expo-router';
+import { Platform } from "react-native";
+import MapView from "react-native-maps";
+import { WebView } from "react-native-webview";
+import { useNavigation } from '@react-navigation/native';
+
 
 const LocationTrackerMenu = () => {
+  const navigation = useNavigation();
   return (
-    <ImageBackground
-      style={styles.locationTrackerMenu}
-      resizeMode="cover"
-      source={require("../../assets/images/map.png")}
-    >
-      <Pressable style={styles.menu} onPress={() => navigation.navigate('/explore')}>
+    <View style={styles.container}>
+      {Platform.OS === "web" ? (
+        <WebView
+          style={styles.map}
+          source={{ uri: "https://www.google.com/maps" }}
+        />
+      ) : (
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      )}
+      {/* <Link href="/explore">
+      <Pressable style={styles.menu}>
         <Image
           style={styles.icon}
           resizeMode="cover"
           source={require("../../assets/images/Menu.png")}
         />
       </Pressable>
+      </Link> */}
 
       <View style={styles.reportRoadObstructionWrapper}>
         <View style={styles.reportRoadObstruction}>
@@ -31,7 +51,7 @@ const LocationTrackerMenu = () => {
       </View>
 
       <View style={styles.warningNotificationContainer}>
-        <View style={styles.warningNotification}>
+        {/* <View style={styles.warningNotification}>
           <View style={styles.warningTextContainer}>
             <Text style={styles.warningText}>
               Warning! Road Obstacle Ahead (~100m)
@@ -40,33 +60,40 @@ const LocationTrackerMenu = () => {
           <View style={styles.roadClearanceButton}>
             <Text style={styles.reportText}>{`Report Road\nClearance`}</Text>
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.nearbyDevices}>
           <View style={styles.nearbyDevicesHeader}>
             <Text style={styles.nearbyDevicesTitle}>Nearby Devices</Text>
           </View>
           {[...Array(3)].map((_, index) => (
-            <Pressable key={index} style={styles.deviceItem} onPress={() => navigation.navigate('/confirm_details')}>
+
+            <Pressable key={index} style={styles.deviceItem}>
               <View style={styles.deviceStatusButton}>
-                <Text style={styles.rescueText}>{`Mark as\nRescued`}</Text>
+                <Link href="/confirm_details">
+                  <Text style={styles.rescueText}>{`Mark as\nRescued`}</Text>
+                </Link>
               </View>
               <View style={styles.deviceInfo}>
                 <Text style={styles.deviceText}>7f:66:85:47:e6:e2</Text>
                 <Text style={styles.distanceText}>~1km</Text>
               </View>
             </Pressable>
+
           ))}
         </View>
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  locationTrackerMenu: {
+  container: {
     flex: 1,
-    width: "100%",
+  },
+  map: {
+    width: '100%',
+    height: '100%',
   },
   menu: {
     position: "absolute",

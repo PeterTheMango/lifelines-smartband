@@ -1,7 +1,12 @@
 import * as React from "react";
 import { Text, StyleSheet, View, Pressable, Image, ScrollView } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+import { Link } from 'expo-router';
+
 
 const RescueHistory = () => {
+  const navigation = useNavigation();
+
   const historyData = [
     {
       name: "Bob Smith",
@@ -23,9 +28,11 @@ const RescueHistory = () => {
 
   return (
     <View style={styles.rescueHistory}>
+      {/* <Link href="/">
       <Pressable onPress={() => navigation.navigate('/')}>
         <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
       </Pressable>
+      </Link> */}
       <Text style={styles.historyTitle}>History</Text>
       <ScrollView contentContainerStyle={styles.historyScrollContainer}>
         <View style={styles.historyContainer}>

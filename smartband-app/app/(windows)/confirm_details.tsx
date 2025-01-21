@@ -1,7 +1,12 @@
 import * as React from "react";
-import { Text, StyleSheet, View, Pressable, TextInput, Image, ScrollView, Picker } from "react-native";
+import { Text, StyleSheet, View, Pressable, TextInput, Image, ScrollView } from "react-native";
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import { Link } from 'expo-router';
+
 
 const ConfirmationScreen = () => {
+  const navigation = useNavigation();
   const [formData, setFormData] = React.useState({
     qrCode: "",
     serialNumber: "",
@@ -22,15 +27,16 @@ const ConfirmationScreen = () => {
 
   const handleSubmit = () => {
     console.log("Form submitted", formData);
-    navigation.navigate('/');
   };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.confirmationScreen}>
-        <Pressable onPress={() => navigation.navigate('/')}>
+      {/* <Link href="/">
+        <Pressable>
           <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
         </Pressable>
+      </Link> */}
         <Text style={styles.details}>DETAILS</Text>
         <View style={styles.formContainer}>
           {Object.keys(formData).map((key, index) => (
@@ -63,9 +69,13 @@ const ConfirmationScreen = () => {
               )}
             </View>
           ))}
-          <Pressable style={styles.confirmButton} onPress={handleSubmit}>
+          
+          <Pressable style={styles.confirmButton}>
+          <Link href="/"  onPress={handleSubmit}>
             <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
+          </Link>
           </Pressable>
+          
         </View>
       </View>
     </ScrollView>
@@ -104,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   inputBox: {
-    height: 40,
+    height: 50,
     backgroundColor: "#d9d9d9",
     borderRadius: 5,
     paddingHorizontal: 10,
@@ -112,7 +122,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     marginTop: 20,
     backgroundColor: "rgba(25, 218, 25, 0.65)",
-    paddingVertical: 15,
+    padding: 20,
     borderRadius: 25,
     alignItems: "center",
   },

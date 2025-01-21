@@ -1,17 +1,23 @@
 import * as React from "react";
 import { Text, StyleSheet, Pressable, View, Image } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+import { Link } from 'expo-router';
 
 const Menu = () => {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.menuContainer}>
-      <Pressable onPress={() => navigation.navigate('/')}>
+      {/* <Pressable onPress={() => navigation.navigate('/')}>
         <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
-      </Pressable>
+      </Pressable> */}
       <Text style={styles.title}>SMARTBAND</Text>
       <View style={styles.menuItems}>
         <Text style={styles.menuText}>Menu</Text>
-        <Pressable onPress={() => navigation.navigate('/rescue_history')}>
+        <Pressable>
+        <Link href="/rescue_history">
           <Text style={styles.menuText}>History</Text>
+          </Link>
         </Pressable>
         <Text style={styles.menuText}>Settings</Text>
         <Text style={styles.menuText}>Logout</Text>
