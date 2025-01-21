@@ -21,8 +21,33 @@ const ConfirmationScreen = () => {
     addressLine2: "",
   });
 
-  const handleInputChange = (field, value) => {
+  // Add form sections for better organization
+  const formSections = {
+    "Device Information": ["qrCode", "serialNumber", "macAddress"],
+    "Personal Information": ["fullName", "idNumber", "nationality", "gender", "dateOfBirth"],
+    "Contact Information": ["phoneNumber", "addressLine1", "addressLine2"]
+  };
+
+  // Add basic validation
+  const [errors, setErrors] = React.useState({});
+  
+  const validateField = (field: string, value: string) => {
+    switch (field) {
+      case 'phoneNumber':
+        return /^\+?[\d\s-]{8,}$/.test(value) ? '' : 'Invalid phone number';
+      case 'dateOfBirth':
+        return /^\d{4}-\d{2}-\d{2}$/.test(value) ? '' : 'Use YYYY-MM-DD format';
+      case 'fullName':
+        return value.length >= 2 ? '' : 'Name is required';
+      default:
+        return '';
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
+    const error = validateField(field, value);
+    setErrors(prev => ({ ...prev, [field]: error }));
   };
 
   const handleSubmit = () => {
@@ -39,41 +64,54 @@ const ConfirmationScreen = () => {
       </Link> */}
         <Text style={styles.details}>DETAILS</Text>
         <View style={styles.formContainer}>
-          {Object.keys(formData).map((key, index) => (
-            <View key={index} style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>{key.replace(/([A-Z])/g, ' $1').trim()}</Text>
-              {key === "gender" ? (
-                <Picker
-                  selectedValue={formData[key]}
-                  style={styles.inputBox}
-                  onValueChange={(value) => handleInputChange(key, value)}
-                >
-                  <Picker.Item label="Male" value="Male" />
-                  <Picker.Item label="Female" value="Female" />
-                  <Picker.Item label="Other" value="Other" />
-                </Picker>
-              ) : key === "dateOfBirth" ? (
-                <TextInput
-                  style={styles.inputBox}
-                  placeholder="YYYY-MM-DD"
-                  value={formData[key]}
-                  onChangeText={(text) => handleInputChange(key, text)}
-                  keyboardType="numeric"
-                />
-              ) : (
-                <TextInput
-                  style={styles.inputBox}
-                  value={formData[key]}
-                  onChangeText={(text) => handleInputChange(key, text)}
-                />
-              )}
+          {Object.entries(formSections).map(([section, fields]) => (
+            <View key={section} style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>{section}</Text>
+              {fields.map((key) => (
+                <View key={key} style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>
+                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                    {['fullName', 'idNumber', 'phoneNumber'].includes(key) && 
+                      <Text style={styles.required}> *</Text>
+                    }
+                  </Text>
+                  {key === "gender" ? (
+                    <Picker
+                      selectedValue={formData[key]}
+                      style={[styles.inputBox, styles.picker]}
+                      onValueChange={(value) => handleInputChange(key, value)}
+                    >
+                      <Picker.Item label="Male" value="Male" />
+                      <Picker.Item label="Female" value="Female" />
+                      <Picker.Item label="Other" value="Other" />
+                    </Picker>
+                  ) : (
+                    <TextInput
+                      style={[
+                        styles.inputBox,
+                        errors[key] ? styles.inputError : null
+                      ]}
+                      value={formData[key]}
+                      onChangeText={(text) => handleInputChange(key, text)}
+                      keyboardType={key === "dateOfBirth" || key === "phoneNumber" ? "numeric" : "default"}
+                      placeholder={key === "dateOfBirth" ? "YYYY-MM-DD" : ""}
+                    />
+                  )}
+                  {errors[key] && (
+                    <Text style={styles.errorText}>{errors[key]}</Text>
+                  )}
+                </View>
+              ))}
             </View>
           ))}
           
-          <Pressable style={styles.confirmButton}>
-          <Link href="/"  onPress={handleSubmit}>
-            <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
-          </Link>
+          <Pressable 
+            style={[styles.confirmButton, styles.buttonShadow]}
+            onPress={handleSubmit}
+          >
+            <Link href="/">
+              <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
+            </Link>
           </Pressable>
           
         </View>
@@ -139,6 +177,41 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 15,
+    color: "#333",
+  },
+  required: {
+    color: "red",
+    fontSize: 16,
+  },
+  inputError: {
+    borderColor: "red",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  picker: {
+    backgroundColor: "#d9d9d9",
+  },
+  buttonShadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  }
 });
 
 export default ConfirmationScreen;

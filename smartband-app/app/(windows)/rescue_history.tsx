@@ -13,7 +13,6 @@ const RescueHistory = () => {
       macAddress: "cb:f2:90:5e:3b:fb",
       timestamp: "2024-12-29 06:12:45.30 UTC",
     },
-    // Additional data entries for scrolling
     {
       name: "Alice Johnson",
       macAddress: "aa:b2:34:cd:5f:90",
@@ -24,6 +23,43 @@ const RescueHistory = () => {
       macAddress: "ff:e3:22:ab:8d:11",
       timestamp: "2024-12-31 09:30:10.15 UTC",
     },
+    {
+      name: "Diana Prince",
+      macAddress: "ee:a1:b2:c3:d4:e5",
+      timestamp: "2024-12-31 10:15:00.20 UTC",
+    },
+    {
+      name: "Edward Stone",
+      macAddress: "11:22:33:44:55:66",
+      timestamp: "2024-12-31 11:20:30.40 UTC",
+    },
+    {
+      name: "Frank Castle",
+      macAddress: "aa:bb:cc:dd:ee:ff",
+      timestamp: "2024-12-31 12:45:15.60 UTC",
+    },
+    {
+      name: "Grace Kelly",
+      macAddress: "12:34:56:78:90:ab",
+      timestamp: "2024-12-31 13:30:20.80 UTC",
+    },
+    {
+      name: "Henry Ford",
+      macAddress: "cd:ef:12:34:56:78",
+      timestamp: "2024-12-31 14:15:40.90 UTC",
+    },
+    {
+      name: "Iris West",
+      macAddress: "90:ab:cd:ef:12:34",
+      timestamp: "2024-12-31 15:20:50.10 UTC",
+    },
+    {
+      name: "Jack Ryan",
+      macAddress: "56:78:90:ab:cd:ef",
+      timestamp: "2024-12-31 16:40:10.30 UTC",
+    },
+    // Add more entries to demonstrate scrolling
+    // ... 10 more entries with similar pattern
   ];
 
   return (
@@ -67,6 +103,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: "center",
     paddingVertical: 20,
+    paddingBottom: 40, // Add extra padding at bottom for better scrolling
   },
   historyContainer: {
     width: 350,
@@ -74,6 +111,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 20,
     gap: 10,
+    minHeight: 'auto', // Allow container to grow with content
   },
   historyItem: {
     backgroundColor: "rgba(255, 255, 255, 0.5)",
