@@ -26,7 +26,7 @@ This is the backend server component of the SmartBand system, responsible for re
 - GET `/coordinates`: Retrieve all coordinates
 
 ##Acknowledgements
-- Lots of the code issues we had were diagnosed with AI mainly through (ChatGPT - 4o)[https://chatgpt.com] as well as using an AI powered Code Editor like (Cursor)[https://www.cursor.com/].
+- Lots of the code issues we had were diagnosed with AI mainly through [ChatGPT - 4o](https://chatgpt.com) as well as using an AI powered Code Editor like [Cursor](https://www.cursor.com/).
 
 ## License
 This project is open-sourced under the MIT License - see the LICENSE file for details.
