@@ -9,17 +9,20 @@ let simulator_mode = false;
 const { startSimulator } = require('./simulator');
 startSimulator(simulator_mode);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI);
+// MongoDB connection which stops the program if it cannot connect to the server
+try{
+  mongoose.connect(process.env.MONGODB_URI);
+} catch {
+  throw new Error("Unable to start program, invalid MONGO_URI credentials or connection cannot be made.");
+}
 
-// Define Coordinates Schema
+// Define Database Schemas
 const Coordinates = require('./Models/Coordinate');
+const Rescuee = require('./Models/Rescuee');
 
-
-// Middleware to parse JSON
 app.use(express.json());
 
-// POST route to receive IoT device data
+// POST route to receive SmartBand device data
 app.post('/coordinates', async (req, res) => {
   try {
     const { macAddress, longtitude, latitude } = req.body;
@@ -47,7 +50,7 @@ app.post('/coordinates', async (req, res) => {
   }
 });
 
-// GET route to fetch all coordinates
+// GET route to fetch all coordinates for frontend
 app.get('/coordinates', async (req, res) => {
   try {
     const coordinates = await Coordinates.find({});
