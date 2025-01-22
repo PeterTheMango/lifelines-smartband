@@ -3,6 +3,10 @@
 ## Description
 This is the backend server component of the SmartBand system, responsible for receiving and managing data from smart wearable devices. The server handles real-time location tracking, data storage, and provides API endpoints for device communication.
 
+## Technologies Used
+- ExpressJS
+- Mongoose
+
 ## Features
 - Real-time location tracking of wearable devices
 - MongoDB integration for data persistence
