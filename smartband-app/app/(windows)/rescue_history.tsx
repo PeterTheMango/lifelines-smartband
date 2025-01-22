@@ -7,6 +7,8 @@ import { Link } from 'expo-router';
 const RescueHistory = () => {
   const navigation = useNavigation();
 
+  // TODO: Fetch data from backend: test data placeholders for now
+
   const historyData = [
     {
       name: "Bob Smith",

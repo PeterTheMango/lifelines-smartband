@@ -1,8 +1,16 @@
-# Welcome to your Expo app 👋
+# SmartBand - Emergency Rescue Tracking System 🆘
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+SmartBand is a life-saving mobile application integrated with smart wearable devices, designed to track and rescue people during crisis situations such as natural disasters and conflicts.
 
-## Get started
+## Features
+
+- **Real-time Location Tracking**: Monitor the location of people wearing SmartBand devices
+- **Rescue Status Updates**: Track and confirm rescue operations in real-time
+- **Rescue History**: Maintain detailed records of rescue operations and encounters
+- **Smart Device Integration**: Seamless connection with SmartBand wearable devices
+- **Crisis Management**: Efficient coordination during emergency situations
+
+## Getting Started
 
 1. Install dependencies
 
@@ -13,38 +21,59 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 2. Start the app
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+The app can be run on:
+- Android emulator
+- iOS simulator
+- Physical devices through Expo Go
+- Development builds for testing
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+The project uses [file-based routing](https://docs.expo.dev/router/introduction) with the main application code located in the **app** directory.
 
-## Get a fresh project
+## Development
 
-When you're ready, run:
+To start development:
+1. Clone this repository
+2. Install dependencies using `npm install`
+3. Configure your SmartBand device settings
+4. Start the development server with `npx expo start`
 
-```bash
-npm run reset-project
-```
+## Technical Stack
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- Built with [Expo](https://expo.dev)
+- React Native for cross-platform compatibility
+- Real-time location tracking
+- Bluetooth integration for device communication
+- Secure data storage for rescue records
 
-## Learn more
+## Contributing
 
-To learn more about developing your project with Expo, look at the following resources:
+We welcome contributions to improve SmartBand and help save more lives. Please feel free to submit issues and pull requests.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Development Tools
 
-## Join the community
+### AI Assistance
+This project leverages AI tools to enhance development efficiency and code quality:
+- **Code Review**: AI-powered code analysis for bug detection and best practices
+- **Documentation**: AI assistance in maintaining clear and consistent documentation
+- **Error Resolution**: Quick troubleshooting and error fixing with AI support
+- **Code Optimization**: AI suggestions for performance improvements
 
-Join our community of developers creating universal apps.
+## Support
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+For technical support or questions:
+- Create an issue in our repository
+- Contact our development team
+- Join our community channels
+
+## License
+
+[Add your license information here]
+
+---
+
+Built with ❤️ for emergency response teams and crisis management

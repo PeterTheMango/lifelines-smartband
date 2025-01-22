@@ -1,13 +1,17 @@
-require('dotenv');
+require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const app = express();
 
 let simulator_mode = false;
 
 const { startSimulator } = require('./simulator');
 startSimulator(simulator_mode);
+
+// Add CORS middleware
+app.use(cors());
 
 // MongoDB connection which stops the program if it cannot connect to the server
 try{

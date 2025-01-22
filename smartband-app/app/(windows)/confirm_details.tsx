@@ -50,8 +50,54 @@ const ConfirmationScreen = () => {
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const handleSubmit = () => {
-    console.log("Form submitted", formData);
+  const handleSubmit = async () => {
+    try {
+      // Validate required fields
+      const requiredFields = ['fullName', 'idNumber', 'phoneNumber'];
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      
+      if (missingFields.length > 0) {
+        missingFields.forEach(field => {
+          setErrors(prev => ({ 
+            ...prev, 
+            [field]: 'This field is required' 
+          }));
+        });
+        return;
+      }
+
+      // Submit to backend
+      const response = await fetch('http://192.168.1.X:3000/rescuee', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          macAddress: formData.macAddress,
+          name: formData.fullName,
+          id: formData.idNumber,
+          nationality: formData.nationality,
+          gender: formData.gender,
+          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : null,
+          phone: formData.phoneNumber,
+          address: `${formData.addressLine1} ${formData.addressLine2}`.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save rescuee data');
+      }
+
+      console.log('Rescuee data saved successfully');
+      navigation.navigate('(tabs)' as never);
+      
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setErrors(prev => ({
+        ...prev,
+        submit: 'Failed to submit form. Please try again.'
+      }));
+    }
   };
 
   return (

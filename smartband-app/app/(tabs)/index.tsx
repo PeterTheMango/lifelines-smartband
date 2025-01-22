@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   StyleSheet,
@@ -16,10 +16,10 @@ import { useNavigation } from '@react-navigation/native';
 
 // Add this helper function at the top level
 const generateRandomMAC = () => {
-  return Array.from({ length: 6 }, () => 
+  return Array.from({ length: 6 }, () =>
     Math.floor(Math.random() * 256)
-    .toString(16)
-    .padStart(2, '0')
+      .toString(16)
+      .padStart(2, '0')
   ).join(':');
 };
 
@@ -41,12 +41,12 @@ const generateDohaMarkers = (): MarkerLocation[] => {
     latitude: 25.2854,
     longitude: 51.5310
   };
-  
+
   return Array.from({ length: 10 }, (_, index) => {
     // Increase the offset range to make markers more visible
     const latOffset = (Math.random() - 0.5) * 0.01;  // Increased spread
     const lngOffset = (Math.random() - 0.5) * 0.01;  // Increased spread
-    
+
     return {
       id: index + 1,
       coordinate: {
@@ -65,11 +65,11 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
@@ -137,26 +137,58 @@ const LocationTrackerMenu = () => {
     }
   };
 
-  // Add console.log to debug markers
-  const [markers] = useState(() => {
-    const unsortedMarkers = generateDohaMarkers();
-    console.log('Generated markers:', unsortedMarkers); // Debug log
-    return unsortedMarkers.sort((a, b) => {
-      const distA = calculateDistance(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        a.coordinate.latitude,
-        a.coordinate.longitude
-      );
-      const distB = calculateDistance(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        b.coordinate.latitude,
-        b.coordinate.longitude
-      );
-      return distA - distB;
-    });
-  });
+  const [markers, setMarkers] = useState<MarkerLocation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Define the getData function
+  async function getData() {
+
+    let data = await fetch(`127.0.0.1:3000/coordinates`);
+    data = await data.json();
+    return data;
+  }
+
+  useEffect(() => {
+    const fetchCoordinates = async () => {
+      try {
+        const data = await getData();
+        console.log(data)
+        
+
+        if (!data.success || !Array.isArray(data.coordinates)) {
+          throw new Error('Invalid data format received');
+        }
+
+        const transformedData = data.coordinates.map((coord: any, index: number) => ({
+          id: index + 1,
+          coordinate: {
+            latitude: parseFloat(coord.latitude),
+            longitude: parseFloat(coord.longitude)
+          },
+          title: coord.macAddress,
+          description: `Distance: calculating...`,
+          macAddress: coord.macAddress
+        }));
+
+        setMarkers(transformedData);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching coordinates:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch data');
+        setLoading(false);
+      }
+    };
+
+    // Initial fetch
+    fetchCoordinates();
+
+    // Set up interval for periodic fetching
+    const interval = setInterval(fetchCoordinates, 15000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
 
   const mapRef = React.useRef<MapView>(null);  // Add this ref
 
@@ -203,7 +235,7 @@ const LocationTrackerMenu = () => {
                 <View style={styles.markerPulse} />
               </View>
             </Marker>
-            
+
             {/* Random Coordinates Markers */}
             {randomCoordinates.map((coord, index) => (
               <Marker
@@ -214,7 +246,7 @@ const LocationTrackerMenu = () => {
                 <View style={styles.redMarker} />
               </Marker>
             ))}
-            
+
             {/* Other markers */}
             {markers.map(marker => (
               <Marker
@@ -231,7 +263,7 @@ const LocationTrackerMenu = () => {
                 <View style={styles.redMarker} />
               </Marker>
             ))}
-            
+
             {/* Add road obstruction markers */}
             {roadObstructions.map(obstruction => (
               <Marker
@@ -243,7 +275,7 @@ const LocationTrackerMenu = () => {
               />
             ))}
           </MapView>
-          <Pressable 
+          <Pressable
             style={styles.centerButton}
             onPress={centerToCurrentLocation}
           >
@@ -271,6 +303,12 @@ const LocationTrackerMenu = () => {
       </View>
 
       <View style={styles.warningNotificationContainer}>
+        {error && (
+          <View style={styles.errorNotification}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+          </View>
+        )}
+
         {nearbyObstruction && (
           <View style={styles.warningNotification}>
             <View style={styles.warningTextContainer}>
@@ -278,7 +316,7 @@ const LocationTrackerMenu = () => {
                 Warning! Road Obstacle Ahead (~100m)
               </Text>
             </View>
-            <Pressable 
+            <Pressable
               style={styles.roadClearanceButton}
               onPress={handleReportClearance}
             >
@@ -509,84 +547,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     minWidth: 80,
   },
+  errorNotification: {
+    backgroundColor: '#FFE5E5',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    width: '100%',
+  },
+  errorText: {
+    color: '#D8000C',
+    textAlign: 'center',
+  },
 });
 
 export default LocationTrackerMenu;
-
-
-
-
-// import { Image, StyleSheet, Platform } from 'react-native';
-
-// import { HelloWave } from '@/components/HelloWave';
-// import ParallaxScrollView from '@/components/ParallaxScrollView';
-// import { ThemedText } from '@/components/ThemedText';
-// import { ThemedView } from '@/components/ThemedView';
-
-// export default function HomeScreen() {
-//   return (
-//     <ParallaxScrollView
-//       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-//       headerImage={
-//         <Image
-//           source={require('@/assets/images/partial-react-logo.png')}
-//           style={styles.reactLogo}
-//         />
-//       }>
-//       <ThemedView style={styles.titleContainer}>
-//         <ThemedText type="title">Welcome!</ThemedText>
-//         <HelloWave />
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-//         <ThemedText>
-//           Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-//           Press{' '}
-//           <ThemedText type="defaultSemiBold">
-//             {Platform.select({
-//               ios: 'cmd + d',
-//               android: 'cmd + m',
-//               web: 'F12'
-//             })}
-//           </ThemedText>{' '}
-//           to open developer tools.
-//         </ThemedText>
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-//         <ThemedText>
-//           Tap the Explore tab to learn more about what's included in this starter app.
-//         </ThemedText>
-//       </ThemedView>
-//       <ThemedView style={styles.stepContainer}>
-//         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-//         <ThemedText>
-//           When you're ready, run{' '}
-//           <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-//           <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-//           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-//           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-//         </ThemedText>
-//       </ThemedView>
-//     </ParallaxScrollView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   titleContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     gap: 8,
-//   },
-//   stepContainer: {
-//     gap: 8,
-//     marginBottom: 8,
-//   },
-//   reactLogo: {
-//     height: 178,
-//     width: 290,
-//     bottom: 0,
-//     left: 0,
-//     position: 'absolute',
-//   },
-// });
