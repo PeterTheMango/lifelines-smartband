@@ -8,15 +8,21 @@ const Menu = () => {
 
   return (
     <View style={styles.menuContainer}>
-      {/* <Pressable onPress={() => navigation.navigate('/')}>
-        <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
-      </Pressable> */}
       <Text style={styles.title}>SMARTBAND</Text>
+
+      <Pressable style={styles.closeIcon}>
+        <Link href="/">
+          <Image resizeMode="cover" source={require("../../assets/images/Close.png")} />
+        </Link>
+      </Pressable>
+
       <View style={styles.menuItems}>
+      <Link href="/">
         <Text style={styles.menuText}>Menu</Text>
+        </Link>
         <Pressable>
-        <Link href="/rescue_history">
-          <Text style={styles.menuText}>History</Text>
+          <Link href="/rescue_history">
+            <Text style={styles.menuText}>History</Text>
           </Link>
         </Pressable>
         <Text style={styles.menuText}>Settings</Text>
@@ -65,6 +71,7 @@ const styles = StyleSheet.create({
     right: 20,
     width: 40,
     height: 40,
+    zIndex: 1,
   },
   menuContainer: {
     flex: 1,

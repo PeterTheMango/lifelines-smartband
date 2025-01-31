@@ -66,11 +66,11 @@ const RescueHistory = () => {
 
   return (
     <View style={styles.rescueHistory}>
-      {/* <Link href="/">
-      <Pressable onPress={() => navigation.navigate('/')}>
-        <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
+      <Pressable style={styles.closeIcon}>
+        <Link href="/">
+          <Image resizeMode="cover" source={require("../../assets/images/Close.png")} />
+        </Link>
       </Pressable>
-      </Link> */}
       <Text style={styles.historyTitle}>History</Text>
       <ScrollView contentContainerStyle={styles.historyScrollContainer}>
         <View style={styles.historyContainer}>
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     right: 20,
     width: 40,
     height: 40,
+    zIndex: 1,
   },
 });
 

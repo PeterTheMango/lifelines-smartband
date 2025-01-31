@@ -11,9 +11,9 @@ const ConfirmationScreen = () => {
     qrCode: "",
     serialNumber: "",
     macAddress: "",
-    fullName: "",
-    idNumber: "",
-    nationality: "",
+    givenName: "",
+    lastName: "",
+    nationalityId: "",
     gender: "Male",
     dateOfBirth: "",
     phoneNumber: "",
@@ -23,22 +23,31 @@ const ConfirmationScreen = () => {
 
   // Add form sections for better organization
   const formSections = {
-    "Device Information": ["qrCode", "serialNumber", "macAddress"],
-    "Personal Information": ["fullName", "idNumber", "nationality", "gender", "dateOfBirth"],
+    "Device Information": ["serialNumber", "macAddress"],
+    "Personal Information": ["givenName", "lastName", "nationalityId", "gender", "dateOfBirth"],
     "Contact Information": ["phoneNumber", "addressLine1", "addressLine2"]
   };
 
   // Add basic validation
   const [errors, setErrors] = React.useState({});
-  
+
   const validateField = (field: string, value: string) => {
     switch (field) {
       case 'phoneNumber':
         return /^\+?[\d\s-]{8,}$/.test(value) ? '' : 'Invalid phone number';
       case 'dateOfBirth':
         return /^\d{4}-\d{2}-\d{2}$/.test(value) ? '' : 'Use YYYY-MM-DD format';
-      case 'fullName':
+      case 'givenName':
+      case 'lastName':
         return value.length >= 2 ? '' : 'Name is required';
+      case 'nationalityId':
+        return value.length >= 1 ? '' : 'ID is required';
+      case 'qrCode':
+        return value.length >= 1 ? '' : 'QR Code is required';
+      case 'serialNumber':
+        return value.length >= 1 ? '' : 'Serial Number is required';
+      case 'macAddress':
+        return /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(value) ? '' : 'Invalid MAC address format';
       default:
         return '';
     }
@@ -53,14 +62,14 @@ const ConfirmationScreen = () => {
   const handleSubmit = async () => {
     try {
       // Validate required fields
-      const requiredFields = ['fullName', 'idNumber', 'phoneNumber'];
+      const requiredFields = ['givenName', 'lastName', 'nationalId', 'phoneNumber'];
       const missingFields = requiredFields.filter(field => !formData[field]);
-      
+
       if (missingFields.length > 0) {
         missingFields.forEach(field => {
-          setErrors(prev => ({ 
-            ...prev, 
-            [field]: 'This field is required' 
+          setErrors(prev => ({
+            ...prev,
+            [field]: 'This field is required'
           }));
         });
         return;
@@ -90,7 +99,7 @@ const ConfirmationScreen = () => {
 
       console.log('Rescuee data saved successfully');
       navigation.navigate('(tabs)' as never);
-      
+
     } catch (error) {
       console.error('Error submitting form:', error);
       setErrors(prev => ({
@@ -103,11 +112,11 @@ const ConfirmationScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.confirmationScreen}>
-      {/* <Link href="/">
-        <Pressable>
-          <Image style={styles.closeIcon} resizeMode="cover" source={require("../../assets/images/Close.png")} />
+        <Pressable style={styles.closeIcon}>
+          <Link href="/">
+            <Image resizeMode="cover" source={require("../../assets/images/Close.png")} />
+          </Link>
         </Pressable>
-      </Link> */}
         <Text style={styles.details}>DETAILS</Text>
         <View style={styles.formContainer}>
           {Object.entries(formSections).map(([section, fields]) => (
@@ -117,7 +126,7 @@ const ConfirmationScreen = () => {
                 <View key={key} style={styles.inputContainer}>
                   <Text style={styles.inputLabel}>
                     {key.replace(/([A-Z])/g, ' $1').trim()}
-                    {['fullName', 'idNumber', 'phoneNumber'].includes(key) && 
+                    {['fullName', 'idNumber', 'phoneNumber'].includes(key) &&
                       <Text style={styles.required}> *</Text>
                     }
                   </Text>
@@ -150,8 +159,8 @@ const ConfirmationScreen = () => {
               ))}
             </View>
           ))}
-          
-          <Pressable 
+
+          <Pressable
             style={[styles.confirmButton, styles.buttonShadow]}
             onPress={handleSubmit}
           >
@@ -159,7 +168,7 @@ const ConfirmationScreen = () => {
               <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
             </Link>
           </Pressable>
-          
+
         </View>
       </View>
     </ScrollView>
@@ -222,6 +231,7 @@ const styles = StyleSheet.create({
     right: 20,
     width: 40,
     height: 40,
+    zIndex: 1,
   },
   sectionContainer: {
     marginBottom: 20,
