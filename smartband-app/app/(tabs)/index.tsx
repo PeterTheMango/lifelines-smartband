@@ -110,7 +110,7 @@ const LocationTrackerMenu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<MarkerLocation | null>(null);
-  const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';  // Replace with your API key
+  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;  // Replace with your API key
 
   // Add rescuers state
   const [rescuers] = useState<Rescuer[]>([
@@ -334,7 +334,7 @@ const LocationTrackerMenu = () => {
               <MapViewDirections
                 origin={currentLocation}
                 destination={selectedMarker.coordinate}
-                apikey={'AIzaSyCnme0OtS8jAN6iaMog4oRlumG-Vhry14Y'}
+                apikey={GOOGLE_MAPS_API_KEY}
                 strokeWidth={5}
                 strokeColor="#0066ff"
                 mode="DRIVING"
