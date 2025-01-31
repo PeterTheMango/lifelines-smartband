@@ -110,7 +110,7 @@ const LocationTrackerMenu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<MarkerLocation | null>(null);
-  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;  // Replace with your API key
+  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
   // Add rescuers state
   const [rescuers] = useState<Rescuer[]>([
