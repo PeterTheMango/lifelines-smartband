@@ -147,31 +147,89 @@ const LocationTrackerMenu = () => {
   // Update the road obstruction reporting
   const reportRoadObstruction = async (location: { latitude: number; longitude: number }) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/obstacle`, {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        timestamp: new Date().toISOString()
+      const response = await fetch('http://192.168.43.130:8000/obstacle', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          timestamp: new Date().toISOString(),
+          status: 'ACTIVE'
+        })
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to report road obstruction');
+      }
+
+      const newObstruction = await response.json();
       
-      const newObstruction: RoadObstruction = {
-        obstacleId: response.data.id,
+      // Add the new obstruction to the local state
+      setRoadObstructions(prev => [...prev, {
+        obstacleId: newObstruction.obstacleId,
         latitude: location.latitude,
         longitude: location.longitude,
         timestamp: new Date()
-      };
-      
-      setRoadObstructions([...roadObstructions, newObstruction]);
-    } catch (err) {
+      }]);
+
+      // Show success message
+      Alert.alert(
+        "Success",
+        "Road obstruction has been reported successfully",
+        [{ text: "OK" }]
+      );
+
+    } catch (error) {
+      console.error('Error reporting obstruction:', error);
+      Alert.alert(
+        "Error",
+        "Failed to report road obstruction. Please try again.",
+        [{ text: "OK" }]
+      );
       setError('Failed to report road obstruction');
     }
   };
 
-  // Update the road clearance reporting
+  // Also update the reportRoadClearance function to work with the backend
   const reportRoadClearance = async (obstacleId: string) => {
     try {
-      await axios.get(`${API_BASE_URL}/obstacle/${obstacleId}`);
-      setRoadObstructions(roadObstructions.filter(obs => obs.obstacleId !== obstacleId));
-    } catch (err) {
+      const response = await fetch(`http://192.168.43.130:8000/obstacle/${obstacleId}`, {
+        method: 'PUT',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'CLEARED',
+          clearedAt: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to report road clearance');
+      }
+
+      // Remove the cleared obstruction from local state
+      setRoadObstructions(prev => 
+        prev.filter(obs => obs.obstacleId !== obstacleId)
+      );
+
+      Alert.alert(
+        "Success",
+        "Road clearance has been reported successfully",
+        [{ text: "OK" }]
+      );
+
+    } catch (error) {
+      console.error('Error reporting clearance:', error);
+      Alert.alert(
+        "Error",
+        "Failed to report road clearance. Please try again.",
+        [{ text: "OK" }]
+      );
       setError('Failed to report road clearance');
     }
   };
@@ -383,18 +441,64 @@ const LocationTrackerMenu = () => {
             </View>
             <Pressable
               style={styles.roadClearanceButton}
-              onPress={() => {
-                const nearbyObstruction = roadObstructions.find(obstruction => {
-                  const distance = calculateDistance(
-                    currentLocation.latitude,
-                    currentLocation.longitude,
-                    obstruction.latitude,
-                    obstruction.longitude
+              onPress={async () => {
+                try {
+                  // Find nearby obstruction
+                  const nearbyObstruction = roadObstructions.find(obstruction => {
+                    const distance = calculateDistance(
+                      currentLocation.latitude,
+                      currentLocation.longitude,
+                      obstruction.latitude,
+                      obstruction.longitude
+                    );
+                    return distance <= 0.005; // 5 meters radius
+                  });
+
+                  if (!nearbyObstruction) {
+                    Alert.alert(
+                      "No Nearby Obstruction",
+                      "You must be within 5 meters of an obstruction to clear it.",
+                      [{ text: "OK" }]
+                    );
+                    return;
+                  }
+
+                  // Send clearance request to backend
+                  const response = await fetch(`http://192.168.43.130:8000/obstacle/${nearbyObstruction.obstacleId}`, {
+                    method: 'PUT',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      status: 'CLEARED',
+                      clearedAt: new Date().toISOString()
+                    })
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Failed to clear obstruction');
+                  }
+
+                  // Remove the cleared obstruction from local state
+                  setRoadObstructions(prev => 
+                    prev.filter(obs => obs.obstacleId !== nearbyObstruction.obstacleId)
                   );
-                  return distance <= 0.005; // Changed to 0.005 km = 5m
-                });
-                if (nearbyObstruction) {
-                  reportRoadClearance(nearbyObstruction.obstacleId.toString());
+
+                  Alert.alert(
+                    "Success",
+                    "Road obstruction has been cleared successfully",
+                    [{ text: "OK" }]
+                  );
+
+                } catch (error) {
+                  console.error('Error clearing obstruction:', error);
+                  Alert.alert(
+                    "Error",
+                    "Failed to clear road obstruction. Please try again.",
+                    [{ text: "OK" }]
+                  );
+                  setError('Failed to clear road obstruction');
                 }
               }}
             >
