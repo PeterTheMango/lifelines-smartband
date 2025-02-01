@@ -8,6 +8,7 @@ const connectDB = require("./util/db");
 const Rescuee = require("./models/rescuee");
 const Consent = require("./models/consent");
 const Coordinates = require("./models/coordinates");
+const Obstacle = require("./models/obstacle"); 
 
 // Simulate smartband data movement (Remove after demo.)
 function simulateMovement() {
@@ -124,6 +125,26 @@ app.post("/consent", async (req, res) => {
 
   return res.status(201).json({ message: "Consent saved successfully." });
 });
+
+app.post("/obstacle", async (req, res) => {
+  const { obstacleId } = req.body;
+  const newObstacle = new Obstacle({ obstacleId });
+  await newObstacle.save();
+  return res.status(201).json({ message: "Obstacle saved successfully." });
+});
+
+app.get("/obstacle", async (req, res) => {
+  const obstacles = await Obstacle.find();
+  if (obstacles.length < 1) {
+    return res.status(201).json({ message: "No obstacles found in the database." });
+  }
+  else {
+    const lastObstacle = obstacles[obstacles.length - 1];
+    await Obstacle.findByIdAndDelete(lastObstacle._id);
+    return res.status(200).json({ message: "Last obstacle removed successfully." });
+  }
+});
+
 
 app.listen(process.env.PORT, async () => {
   await connectDB();
