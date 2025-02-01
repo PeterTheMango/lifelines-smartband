@@ -297,8 +297,8 @@ const LocationTrackerMenu = () => {
                 resetOnChange={true}
                 optimizeWaypoints={true}
                 waypoints={roadObstructions.map(obstruction => ({
-                  latitude: obstruction.coordinate.latitude + 0.00005, // Adjusted offset for 5m radius
-                  longitude: obstruction.coordinate.longitude + 0.00005,
+                  latitude: obstruction.latitude + 0.00005, // Adjusted offset for 5m radius
+                  longitude: obstruction.longitude + 0.00005,
                 }))}
                 onReady={result => {
                   // Check if any obstructions are near the route with 5m threshold
