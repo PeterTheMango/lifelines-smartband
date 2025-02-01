@@ -13,8 +13,8 @@ import {
 import { Link } from 'expo-router';
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { WebView } from "react-native-webview";
-import { useNavigation } from '@react-navigation/native';
 import MapViewDirections from 'react-native-maps-directions';  // Add this import
+import axios from 'axios';
 
 
 // Add this helper function at the top level
@@ -78,26 +78,15 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 // Add new type for road obstructions
 type RoadObstruction = {
-  id: number;
-  coordinate: {
-    latitude: number;
-    longitude: number;
-  };
+  obstacleId: string;
+  latitude: number;
+  longitude: number;
   timestamp: Date;
 };
 
-// Add new type for rescuer
-type Rescuer = {
-  id: number;
-  coordinate: {
-    latitude: number;
-    longitude: number;
-  };
-  name: string;
-};
+const API_BASE_URL = process.env.BACKEND_URL; // e.g., 'http://localhost:3000/api'
 
 const LocationTrackerMenu = () => {
-  const navigation = useNavigation();
   const currentLocation = {
     latitude: 25.2854,
     longitude: 51.5310
@@ -112,97 +101,41 @@ const LocationTrackerMenu = () => {
   const [selectedMarker, setSelectedMarker] = useState<MarkerLocation | null>(null);
   const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
-  // Add rescuers state
-  const [rescuers] = useState<Rescuer[]>([
-    {
-      id: 1,
-      coordinate: {
-        latitude: 25.2854,
-        longitude: 51.5310
-      },
-      name: "Rescuer 1 (You)"
-    },
-    {
-      id: 2,
-      coordinate: {
-        latitude: 25.2960,
-        longitude: 51.5280
-      },
-      name: "Rescuer 2"
-    },
-    {
-      id: 3,
-      coordinate: {
-        latitude: 25.2750,
-        longitude: 51.5340
-      },
-      name: "Rescuer 3"
-    },
-    {
-      id: 4,
-      coordinate: {
-        latitude: 25.2890,
-        longitude: 51.5250
-      },
-      name: "Rescuer 4"
-    }
-  ]);
-
   useEffect(() => {
-    let mounted = true;  // Add mounted flag for cleanup
+    let mounted = true;
 
-    const generateQatarMarkers = () => {
+    const fetchMarkers = async () => {
       try {
-        // Define some real Qatar locations for devices (rescuees)
-        const qatarLocations = [
-          { name: "West Bay", lat: 25.3287, lng: 51.5295 },
-          { name: "The Pearl", lat: 25.3741, lng: 51.5503 },
-          { name: "Katara", lat: 25.3594, lng: 51.5275 },
-          { name: "Souq Waqif", lat: 25.2867, lng: 51.5333 },
-          { name: "Education City", lat: 25.3149, lng: 51.4901 },
-          { name: "Al Wakrah", lat: 25.1715, lng: 51.6034 },
-          { name: "Al Khor", lat: 25.6840, lng: 51.4978 },
-          { name: "Lusail", lat: 25.4285, lng: 51.5368 },
-          { name: "Duhail", lat: 25.3507, lng: 51.4899 },
-          { name: "Al Sadd", lat: 25.2784, lng: 51.5079 }
-        ];
-
-        // Generate markers with slight offsets from real locations
-        const randomMarkers = qatarLocations.map((location, index) => {
-          const latOffset = (Math.random() - 0.5) * 0.002; // Smaller offset for more realistic positioning
-          const lngOffset = (Math.random() - 0.5) * 0.002;
-
-          return {
-            id: index + 1,
-            coordinate: {
-              latitude: location.lat + latOffset,
-              longitude: location.lng + lngOffset
-            },
-            title: `Device at ${location.name}`,
-            description: `Emergency device near ${location.name}`,
-            macAddress: generateRandomMAC()
-          };
-        });
-
+        const response = await axios.get(`${API_BASE_URL}/coordinates`);
         if (mounted) {
-          setMarkers(randomMarkers);
+          // Transform the backend data to match our MarkerLocation type
+          const transformedMarkers = response.data.map((device: any) => ({
+            macAddress: device.macAddress,
+            latitude: device.latitude,
+            longitude: device.longitude,
+            title: `Device at ${device.location}`,
+            description: device.description || `Emergency device`
+          }));
+          
+          setMarkers(transformedMarkers);
           setError(null);
           setLoading(false);
         }
       } catch (err) {
         if (mounted) {
-          setError('Failed to generate markers');
+          setError('Failed to fetch devices');
           setLoading(false);
+          // Fallback to generated markers if API fails
         }
       }
     };
 
-    generateQatarMarkers();
-    // const intervalId = setInterval(generateQatarMarkers, 15000);
+    fetchMarkers();
+    const intervalId = setInterval(fetchMarkers, 15000); // Refresh every 15 seconds
 
     return () => {
       mounted = false;
-      // clearInterval(intervalId);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -234,6 +167,49 @@ const LocationTrackerMenu = () => {
     );
   };
 
+  // Update the road obstruction reporting
+  const reportRoadObstruction = async (location: { latitude: number; longitude: number }) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/obstacle`, {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: new Date().toISOString()
+      });
+      
+      const newObstruction: RoadObstruction = {
+        obstacleId: response.data.id,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: new Date()
+      };
+      
+      setRoadObstructions([...roadObstructions, newObstruction]);
+    } catch (err) {
+      setError('Failed to report road obstruction');
+    }
+  };
+
+  // Update the road clearance reporting
+  const reportRoadClearance = async (obstacleId: string) => {
+    try {
+      await axios.get(`${API_BASE_URL}/obstacle/${obstacleId}`);
+      setRoadObstructions(roadObstructions.filter(obs => obs.obstacleId !== obstacleId));
+    } catch (err) {
+      setError('Failed to report road clearance');
+    }
+  };
+
+  // Add this function inside LocationTrackerMenu
+  const markDeviceAsRescued = async (macAddress: string) => {
+    try {
+      await axios.get(`${API_BASE_URL}/rescuee/${macAddress}`);
+      // Remove the rescued device from the markers list
+      setMarkers(markers.filter(marker => marker.macAddress !== macAddress));
+    } catch (err) {
+      setError('Failed to mark device as rescued');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {Platform.OS === "web" ? (
@@ -258,26 +234,6 @@ const LocationTrackerMenu = () => {
             minZoomLevel={10}
             maxZoomLevel={20}
           >
-            {/* Rescuer markers */}
-            {rescuers.map(rescuer => (
-              <Marker
-                key={`rescuer-${rescuer.id}`}
-                coordinate={rescuer.coordinate}
-                title={rescuer.name}
-                anchor={{ x: 0.5, y: 1 }}
-              >
-                <View style={styles.markerContainer}>
-                  <View style={[
-                    styles.currentLocationPin,
-                    rescuer.id !== 1 && styles.otherRescuerPin
-                  ]} />
-                  <View style={[
-                    styles.pinTail,
-                    rescuer.id !== 1 && styles.otherRescuerPinTail
-                  ]} />
-                </View>
-              </Marker>
-            ))}
 
             {/* Current location marker */}
             <Marker
@@ -415,14 +371,7 @@ const LocationTrackerMenu = () => {
       <View style={styles.reportRoadObstructionWrapper}>
         <Pressable
           style={styles.reportRoadObstruction}
-          onPress={() => {
-            const newObstruction: RoadObstruction = {
-              id: Date.now(),
-              coordinate: { ...currentLocation },
-              timestamp: new Date(),
-            };
-            setRoadObstructions([...roadObstructions, newObstruction]);
-          }}
+          onPress={() => reportRoadObstruction(currentLocation)}
         >
           <Text style={styles.reportText}>{`Report Road\nObstruction`}</Text>
         </Pressable>
@@ -455,7 +404,7 @@ const LocationTrackerMenu = () => {
                   return distance <= 0.005; // Changed to 0.005 km = 5m
                 });
                 if (nearbyObstruction) {
-                  setRoadObstructions(roadObstructions.filter(obs => obs.id !== nearbyObstruction.id));
+                  reportRoadClearance(nearbyObstruction.id.toString());
                 }
               }}
             >
@@ -791,13 +740,6 @@ const styles = StyleSheet.create({
   clearRouteButtonPressed: {
     opacity: 0.8,
     transform: [{ scale: 0.95 }],
-  },
-  otherRescuerPin: {
-    backgroundColor: '#4CAF50', // Green color for other rescuers
-    borderColor: 'white',
-  },
-  otherRescuerPinTail: {
-    backgroundColor: '#4CAF50',
   },
 });
 
