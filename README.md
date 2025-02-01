@@ -13,5 +13,11 @@ To get started with our project please select the folder of which app you want t
 ## Acknowledgements
 - Lots of the code issues we had were diagnosed with AI mainly through [ChatGPT - 4o](https://chatgpt.com) as well as using an AI powered Code Editor like [Cursor](https://www.cursor.com/).
 
+
+## Steps to install
+- Clone the repository
+- Run `npm i` to install backages.
+- Run `node index.js` to start the webserver.
+
 ## License
 This project is open-sourced under the MIT License - see the LICENSE file for details.
