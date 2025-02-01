@@ -1,7 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const cors = require("cors");
 app.use(express.json());
+app.use(cors());
 const connectDB = require("./util/db");
 
 // Models
@@ -18,8 +20,8 @@ function simulateMovement() {
       return;
     }
     coordinates.forEach(async (coordinate) => {
-      coordinate.latitude += Math.random() * 0.002;
-      coordinate.longitude += Math.random() * 0.002;
+      coordinate.latitude += (Math.random() - 0.5) * 0.0002;
+      coordinate.longitude += (Math.random() - 0.5) * 0.0002;
       await coordinate.save();
     });
   }, 5000);
@@ -36,8 +38,17 @@ app.get("/coordinates", async (req, res) => {
   return res.status(200).json(coordinates);
 });
 
+app.get("/rescuee", async (req, res) => {
+  const rescuees = await Rescuee.find();
+  if (rescuees.length < 1) {
+    return res
+      .status(201)
+      .json({ message: "No rescuees found in the database." });
+  }
+  return res.status(200).json(rescuees);
+});
+
 app.post("/coordinates", async (req, res) => {
-  console.log(req.body);
   const { macAddress, latitude, longitude } = req.body;
   if (!macAddress || !latitude || !longitude) {
     return res.status(400).json({ message: "Missing required fields." });
@@ -76,6 +87,8 @@ app.post("/rescuee", async (req, res) => {
     address,
     phoneNumber,
   } = req.body;
+
+  console.log(req.body);
 
   let isExistingConsent = await Consent.findOne({ serialNumber: serialNumber });
 
@@ -134,7 +147,7 @@ app.post("/obstacle", async (req, res) => {
   return res.status(201).json({ message: "Obstacle saved successfully." });
 });
 
-app.get("/obstacle", async (req, res) => {
+app.put("/obstacle", async (req, res) => {
   const obstacles = await Obstacle.find();
   if (obstacles.length < 1) {
     return res
@@ -152,5 +165,5 @@ app.get("/obstacle", async (req, res) => {
 app.listen(process.env.PORT, "0.0.0.0", async () => {
   await connectDB();
   console.log(`Server is running on port http://127.0.0.1:${process.env.PORT}`);
-  simulateMovement();
+  // simulateMovement();
 });
