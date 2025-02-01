@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+app.use(express.json());
 const connectDB = require("./util/db");
 
 // Models
@@ -28,7 +29,7 @@ app.get("/coordinates", async (req, res) => {
   const coordinates = await Coordinates.find();
   if (coordinates.length < 1) {
     return res
-      .status(204)
+      .status(201)
       .json({ message: "No coordinates found in the database." });
   }
   return res.status(200).json(coordinates);
@@ -129,3 +130,21 @@ app.listen(process.env.PORT, async () => {
   console.log(`Server is running on port http://127.0.0.1:${process.env.PORT}`);
   simulateMovement();
 });
+
+let test = async () => {
+  let data = await fetch("http://127.0.0.1:8000/coordinates", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      macAddress: null,
+      latitude: null,
+      longitude: null,
+    }),
+  });
+  let format = await data.json();
+  console.log(format);
+};
+
+test();
