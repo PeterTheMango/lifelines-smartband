@@ -1,68 +1,65 @@
 import * as React from "react";
-import { Text, StyleSheet, View, Pressable, Image, ScrollView } from "react-native";
+import { Text, StyleSheet, View, Pressable, Image, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { Link } from 'expo-router';
 
+interface RescueeHistory {
+  name: string;
+  macAddress: string;
+  timestamp: string;
+}
 
 const RescueHistory = () => {
-  const navigation = useNavigation();
+  const [historyData, setHistoryData] = React.useState<RescueeHistory[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  // TODO: Fetch data from backend: test data placeholders for now
+  React.useEffect(() => {
+    fetchHistoryData();
+  }, []);
 
-  const historyData = [
-    {
-      name: "Bob Smith",
-      macAddress: "cb:f2:90:5e:3b:fb",
-      timestamp: "2024-12-29 06:12:45.30 UTC",
-    },
-    {
-      name: "Alice Johnson",
-      macAddress: "aa:b2:34:cd:5f:90",
-      timestamp: "2024-12-30 07:45:21.50 UTC",
-    },
-    {
-      name: "Charlie Brown",
-      macAddress: "ff:e3:22:ab:8d:11",
-      timestamp: "2024-12-31 09:30:10.15 UTC",
-    },
-    {
-      name: "Diana Prince",
-      macAddress: "ee:a1:b2:c3:d4:e5",
-      timestamp: "2024-12-31 10:15:00.20 UTC",
-    },
-    {
-      name: "Edward Stone",
-      macAddress: "11:22:33:44:55:66",
-      timestamp: "2024-12-31 11:20:30.40 UTC",
-    },
-    {
-      name: "Frank Castle",
-      macAddress: "aa:bb:cc:dd:ee:ff",
-      timestamp: "2024-12-31 12:45:15.60 UTC",
-    },
-    {
-      name: "Grace Kelly",
-      macAddress: "12:34:56:78:90:ab",
-      timestamp: "2024-12-31 13:30:20.80 UTC",
-    },
-    {
-      name: "Henry Ford",
-      macAddress: "cd:ef:12:34:56:78",
-      timestamp: "2024-12-31 14:15:40.90 UTC",
-    },
-    {
-      name: "Iris West",
-      macAddress: "90:ab:cd:ef:12:34",
-      timestamp: "2024-12-31 15:20:50.10 UTC",
-    },
-    {
-      name: "Jack Ryan",
-      macAddress: "56:78:90:ab:cd:ef",
-      timestamp: "2024-12-31 16:40:10.30 UTC",
-    },
-    // Add more entries to demonstrate scrolling
-    // ... 10 more entries with similar pattern
-  ];
+  const fetchHistoryData = async () => {
+    try {
+      const response = await fetch('http://192.168.43.130:8000/rescuee', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch history data');
+      }
+
+      const data = await response.json();
+      setHistoryData(data);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load history');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.rescueHistory, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.rescueHistory, styles.centerContent]}>
+        <Text style={styles.errorText}>{error}</Text>
+        <Pressable style={styles.retryButton} onPress={fetchHistoryData}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.rescueHistory}>
@@ -76,11 +73,16 @@ const RescueHistory = () => {
         <View style={styles.historyContainer}>
           {historyData.map((item, index) => (
             <View key={index} style={styles.historyItem}>
-              <Text style={styles.nameText}>{item.name}</Text>
+              <Text style={styles.nameText}>{`${item.name}`}</Text>
               <Text style={styles.detailText}>{item.macAddress}</Text>
-              <Text style={styles.detailText}>{item.timestamp}</Text>
+              <Text style={styles.detailText}>
+                {new Date(item.timestamp).toLocaleString()}
+              </Text>
             </View>
           ))}
+          {historyData.length === 0 && (
+            <Text style={styles.noDataText}>No history data available</Text>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -140,6 +142,31 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     zIndex: 1,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#000',
+    padding: 10,
+    borderRadius: 5,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  noDataText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    padding: 20,
   },
 });
 

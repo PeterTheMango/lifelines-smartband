@@ -61,8 +61,8 @@ const ConfirmationScreen = () => {
 
   const handleSubmit = async () => {
     try {
-      // Validate required fields
-      const requiredFields = ['givenName', 'lastName', 'nationalId', 'phoneNumber'];
+      // Validate all required fields
+      const requiredFields = ['givenName', 'lastName', 'nationalityId', 'phoneNumber', 'serialNumber', 'macAddress'];
       const missingFields = requiredFields.filter(field => !formData[field]);
 
       if (missingFields.length > 0) {
@@ -75,33 +75,46 @@ const ConfirmationScreen = () => {
         return;
       }
 
+      // Format the data for submission
+      const formattedData = {
+        macAddress: formData.macAddress,
+        serialNumber: formData.serialNumber,
+        givenName: formData.givenName,
+        lastName: formData.lastName,
+        nationalityId: formData.nationalityId,
+        gender: formData.gender,
+        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+        phoneNumber: formData.phoneNumber,
+        address: `${formData.addressLine1} ${formData.addressLine2}`.trim(),
+      };
+
       // Submit to backend
-      const response = await fetch('http://192.168.1.X:3000/rescuee', {
+      const response = await fetch('http://192.168.43.130:8000/rescuee', {
         method: 'POST',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          macAddress: formData.macAddress,
-          name: formData.fullName,
-          id: formData.idNumber,
-          nationality: formData.nationality,
-          gender: formData.gender,
-          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : null,
-          phone: formData.phoneNumber,
-          address: `${formData.addressLine1} ${formData.addressLine2}`.trim(),
-        }),
+        body: JSON.stringify(formattedData)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save rescuee data');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save rescuee data');
       }
 
-      console.log('Rescuee data saved successfully');
-      navigation.navigate('(tabs)' as never);
+      // Show success message
+      alert('Rescuee data saved successfully');
+      
+      // Navigate back to index
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'index' as never }],
+      });
 
     } catch (error) {
       console.error('Error submitting form:', error);
+      alert(error instanceof Error ? error.message : 'Failed to submit form. Please try again.');
       setErrors(prev => ({
         ...prev,
         submit: 'Failed to submit form. Please try again.'
@@ -164,9 +177,7 @@ const ConfirmationScreen = () => {
             style={[styles.confirmButton, styles.buttonShadow]}
             onPress={handleSubmit}
           >
-            <Link href="/">
-              <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
-            </Link>
+            <Text style={styles.confirmButtonText}>Confirm Rescued Personnel</Text>
           </Pressable>
 
         </View>

@@ -37,7 +37,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
-      ]
+      ],
+      ["expo-build-properties", {
+        "android": {
+          "useCleartextTraffic": true
+        }
+      }]
     ],
     "experiments": {
       "typedRoutes": true

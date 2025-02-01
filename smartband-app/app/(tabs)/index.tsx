@@ -15,6 +15,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { WebView } from "react-native-webview";
 import MapViewDirections from 'react-native-maps-directions';  // Add this import
 import axios from 'axios';
+import { GOOGLE_MAPS_API_KEY, BACKEND_URL } from '@env';
 
 
 // Add this helper function at the top level
@@ -29,38 +30,11 @@ const generateRandomMAC = () => {
 // Update the MarkerLocation type
 type MarkerLocation = {
   id: number;
-  coordinate: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude: number;
+  longitude: number;
   title: string;
   description: string;
   macAddress: string;  // Add this field
-};
-
-// Update the marker generation function
-const generateDohaMarkers = (): MarkerLocation[] => {
-  const dohaCenter = {
-    latitude: 25.2854,
-    longitude: 51.5310
-  };
-
-  return Array.from({ length: 10 }, (_, index) => {
-    // Increase the offset range to make markers more visible
-    const latOffset = (Math.random() - 0.5) * 0.01;  // Increased spread
-    const lngOffset = (Math.random() - 0.5) * 0.01;  // Increased spread
-
-    return {
-      id: index + 1,
-      coordinate: {
-        latitude: dohaCenter.latitude + latOffset,
-        longitude: dohaCenter.longitude + lngOffset,
-      },
-      title: `Location ${index + 1}`,
-      description: `Test marker ${index + 1}`,
-      macAddress: generateRandomMAC()
-    };
-  });
 };
 
 // Add this helper function at the top level
@@ -99,17 +73,20 @@ const LocationTrackerMenu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<MarkerLocation | null>(null);
-  const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+  // const GOOGLE_MAPS_API_KEY = GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     let mounted = true;
 
     const fetchMarkers = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/coordinates`);
+        console.log("Fetching markers...");
+        const response = await axios.get(`http://192.168.43.130:8000/coordinates`);
+        
         if (mounted) {
           // Transform the backend data to match our MarkerLocation type
-          const transformedMarkers = response.data.map((device: any) => ({
+          const transformedMarkers = response.data.map((device: any, index: number) => ({
+            id: index + 1,
             macAddress: device.macAddress,
             latitude: device.latitude,
             longitude: device.longitude,
@@ -251,13 +228,16 @@ const LocationTrackerMenu = () => {
             {markers.map(marker => (
               <Marker
                 key={`device-${marker.id}`}
-                coordinate={marker.coordinate}
+                coordinate={{
+                  latitude: marker.latitude,
+                  longitude: marker.longitude
+                }}
                 title={marker.macAddress}
                 description={`Distance: ${calculateDistance(
                   currentLocation.latitude,
                   currentLocation.longitude,
-                  marker.coordinate.latitude,
-                  marker.coordinate.longitude
+                  marker.latitude,
+                  marker.longitude
                 ).toFixed(2)}km`}
                 onPress={() => handleMarkerPress(marker)}
                 anchor={{ x: 0.5, y: 1 }}
@@ -272,8 +252,11 @@ const LocationTrackerMenu = () => {
             {/* Road obstruction markers */}
             {roadObstructions.map(obstruction => (
               <Marker
-                key={obstruction.id}
-                coordinate={obstruction.coordinate}
+                key={obstruction.obstacleId}
+                coordinate={{
+                  latitude: obstruction.latitude,
+                  longitude: obstruction.longitude
+                }}
                 title="Road Obstruction"
                 description={`Reported at ${obstruction.timestamp.toLocaleTimeString()}`}
                 anchor={{ x: 0.5, y: 1 }}
@@ -289,7 +272,10 @@ const LocationTrackerMenu = () => {
             {selectedMarker && (
               <MapViewDirections
                 origin={currentLocation}
-                destination={selectedMarker.coordinate}
+                destination={{
+                  latitude: selectedMarker.latitude,
+                  longitude: selectedMarker.longitude
+                }}
                 apikey={GOOGLE_MAPS_API_KEY}
                 strokeWidth={5}
                 strokeColor="#0066ff"
@@ -303,7 +289,11 @@ const LocationTrackerMenu = () => {
                 onReady={result => {
                   // Check if any obstructions are near the route with 5m threshold
                   const obstructionsNearRoute = roadObstructions.filter(obstruction => 
-                    isPointNearRoute(obstruction.coordinate, result.coordinates, 0.005)
+                    isPointNearRoute(
+                      { latitude: obstruction.latitude, longitude: obstruction.longitude },
+                      result.coordinates,
+                      0.005
+                    )
                   );
 
                   if (obstructionsNearRoute.length > 0) {
@@ -398,13 +388,13 @@ const LocationTrackerMenu = () => {
                   const distance = calculateDistance(
                     currentLocation.latitude,
                     currentLocation.longitude,
-                    obstruction.coordinate.latitude,
-                    obstruction.coordinate.longitude
+                    obstruction.latitude,
+                    obstruction.longitude
                   );
                   return distance <= 0.005; // Changed to 0.005 km = 5m
                 });
                 if (nearbyObstruction) {
-                  reportRoadClearance(nearbyObstruction.id.toString());
+                  reportRoadClearance(nearbyObstruction.obstacleId.toString());
                 }
               }}
             >
@@ -424,8 +414,8 @@ const LocationTrackerMenu = () => {
                 distance: calculateDistance(
                   currentLocation.latitude,
                   currentLocation.longitude,
-                  marker.coordinate.latitude,
-                  marker.coordinate.longitude
+                  marker.latitude,
+                  marker.longitude
                 )
               }))
               .sort((a, b) => a.distance - b.distance)
