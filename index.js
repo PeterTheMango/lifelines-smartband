@@ -8,7 +8,7 @@ const connectDB = require("./util/db");
 const Rescuee = require("./models/rescuee");
 const Consent = require("./models/consent");
 const Coordinates = require("./models/coordinates");
-const Obstacle = require("./models/obstacle"); 
+const Obstacle = require("./models/obstacle");
 
 // Simulate smartband data movement (Remove after demo.)
 function simulateMovement() {
@@ -37,6 +37,7 @@ app.get("/coordinates", async (req, res) => {
 });
 
 app.post("/coordinates", async (req, res) => {
+  console.log(req.body);
   const { macAddress, latitude, longitude } = req.body;
   if (!macAddress || !latitude || !longitude) {
     return res.status(400).json({ message: "Missing required fields." });
@@ -136,36 +137,20 @@ app.post("/obstacle", async (req, res) => {
 app.get("/obstacle", async (req, res) => {
   const obstacles = await Obstacle.find();
   if (obstacles.length < 1) {
-    return res.status(201).json({ message: "No obstacles found in the database." });
-  }
-  else {
+    return res
+      .status(201)
+      .json({ message: "No obstacles found in the database." });
+  } else {
     const lastObstacle = obstacles[obstacles.length - 1];
     await Obstacle.findByIdAndDelete(lastObstacle._id);
-    return res.status(200).json({ message: "Last obstacle removed successfully." });
+    return res
+      .status(200)
+      .json({ message: "Last obstacle removed successfully." });
   }
 });
 
-
-app.listen(process.env.PORT, async () => {
+app.listen(process.env.PORT, "0.0.0.0", async () => {
   await connectDB();
   console.log(`Server is running on port http://127.0.0.1:${process.env.PORT}`);
   simulateMovement();
 });
-
-let test = async () => {
-  let data = await fetch("http://127.0.0.1:8000/coordinates", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      macAddress: null,
-      latitude: null,
-      longitude: null,
-    }),
-  });
-  let format = await data.json();
-  console.log(format);
-};
-
-test();
